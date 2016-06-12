@@ -1,0 +1,12 @@
+{
+	"name": "FanCtl-web",
+	"description": "Webinterface for FanCtl with less Hitler",
+	"author": "Toble Miner",
+	"dependencies" :
+	{
+		"express": "*",
+		"socket.io": "*",
+		"i2c-bus": "*",
+		"jquery": "*"
+	}
+}

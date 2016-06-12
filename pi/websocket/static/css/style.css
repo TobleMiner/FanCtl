@@ -1,8 +1,10 @@
-body {
+body
+{
 	font-family: "Source Sans Pro", sans-serif;
 }
 
-h3 {
+h3
+{
 	position: fixed;
 	text-align: center;
 	top: 0;

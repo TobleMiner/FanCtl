@@ -32,6 +32,11 @@ class Model
 	}
 }
 
+class Fan
+{
+	
+}
+
 class Controller
 {
 	constructor(model)
@@ -76,6 +81,7 @@ $(document).ready(function()
 
 	socket.on('connect', function()
 	{
+		console.log("Connected");
 		controller.connect();
 	});
 
@@ -84,6 +90,4 @@ $(document).ready(function()
 		console.log("Disconnected");
 		controller.disconnect();
 	});
-
-	console.log("Allahu Akbar");
 });

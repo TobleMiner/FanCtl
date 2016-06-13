@@ -21,14 +21,23 @@ io.sockets.on('connection', function(socket)
 {
 	socket.on('connect', function()
 	{
-		console.log(socket.client);
+		console.log('Client connected');
 	});
 
 	socket.emit('connect', {});
 
-	socket.emit('faninit', fanctl.fanindex);
+	socket.emit('faninit', Object.keys(fanctl.fanindex));
 
-	// socket.emit('fanupdate', {"key":"value"});
+	fanctl.on('update', function()
+	{
+		socket.emit('fanupdate', {});
+	});
+
+	socket.on('disconnection', function()
+	{
+		console.log('Client disconnected');
+		clearInterval(intervalid);
+	});
 });
 
 server.listen(conf.port);

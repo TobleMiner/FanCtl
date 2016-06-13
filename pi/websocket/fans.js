@@ -1,3 +1,5 @@
+var EventEmitter = require('events');
+
 var I2cMaster = require('./i2cmaster.js');
 
 class FanData
@@ -11,17 +13,25 @@ class FanData
 	}
 }
 
-class Fan
+class Fan extends EventEmitter
 {
 	constructor(id, controller)
 	{
+		super();
 		this.controller = controller;
 		this.id = id;
 	}
 
+	update()
+	{
+		this.dutycycle = this.getDutyCycle();
+		this.rpm = this.getRpm();
+		this.emit('update');
+	}
+
 	getFanData()
 	{
-		return new FanData(this.id, this.controller.address, this.getDutyCycle(), this.getRpm());
+		return new FanData(this.id, this.controller.address, this.dutycycle, this.rpm);
 	}
 
 	setDutyCycle(dutyCycle)
@@ -49,16 +59,23 @@ class Fan
 	}
 }
 
-class Controller
+class Controller extends EventEmitter
 {
 	constructor(master, address)
 	{
+		super();
 		this.address = address;
 		this.master = master;
 		this.numfans = this.getNumFans();
 		this.fans = [];
 		for(var i = 0; i < this.numfans; i++)
 			this.fans[i] = new Fan(i, this);
+	}
+
+	update()
+	{
+		this.forEach(fan => fan.update());
+		this.emit('update');
 	}
 
 	getNumFans()
@@ -72,32 +89,41 @@ class Controller
 	}
 }
 
-class FanCtl
+class FanCtl extends EventEmitter
 {
-	constructor(i2cbus, address)
+	constructor(i2cbus, address, interval=3000)
 	{
+		super();
 		this.master = new I2cMaster(i2cbus);
 		if(typeof(address) != 'object')
 			address = [address];
 		this.controllers = [];
 		address.forEach(address =>
 			this.controllers[address] = new Controller(this.master, address));
-		this.buildFanIndex();
+		this.buildFlatUidFanIndex();
+		var fanctl = this;
+		var updatefunc = function()
+		{
+			fanctl.update();
+			fanctl.timeoutid = setTimeout(updatefunc, interval);
+		};
+		this.timeoutid = setTimeout(updatefunc, interval);
 	}
 
-	buildFanIndex()
+	buildFlatUidFanIndex()
 	{
-		this.fanindex = {};
+		this.fanindex = [];
 		var i = 0;
-		this.controllers.forEach(cntrl => {
-			this.fanindex[cntrl.address] = [];
-			var j = 0;
-			cntrl.forEach(fan => {
-				this.fanindex[cntrl.address].push(fan.getFanData());
-				j++;
-			});
-			i++;
-		});
+		this.controllers.forEach(cntrl => cntrl.forEach(fan => {
+				this.fanindex[i] = fan;
+				i++;
+		}));
+	}
+
+	update()
+	{
+		this.forEach(cntrl => cntrl.update());
+		this.emit('update');
 	}
 
 	forEach(func)

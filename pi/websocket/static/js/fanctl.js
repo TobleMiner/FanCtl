@@ -109,8 +109,8 @@ $(document).ready(function()
 
 	socket.on('fanupdate', function(fan)
 	{
-		console.log(msg);
-		controller.updateFan(fan);
+		console.log(fan);
+		// controller.updateFan(fan);
 	});
 
 	socket.on('disconnect', function()

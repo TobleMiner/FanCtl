@@ -6,12 +6,9 @@ var server = require('http').createServer(app);
 var io = require('socket.io').listen(server);
 var conf = require('./config.json');
 
-var i2c = require('i2c-bus');
-var i2c1 = i2c.openSync(1);
-var buff = Buffer.alloc(1, 0);
-i2c1.i2cWriteSync(42, 1, buff);
-i2c1.i2cReadSync(42, 1, buff);
-console.log(buff[0]);
+var FanCtl = require('./fans.js');
+
+new FanCtl(1, 42);
 
 app.use(express.static(__dirname + '/static'));
 
@@ -32,4 +29,3 @@ io.sockets.on('connection', function(socket)
 });
 
 server.listen(conf.port);
-;

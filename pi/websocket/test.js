@@ -28,6 +28,8 @@ io.sockets.on('connection', function(socket)
 	});
 
 	socket.emit('connect', {});
+	// socket.emit('fanupdate', {"key":"value"});
 });
 
 server.listen(conf.port);
+;

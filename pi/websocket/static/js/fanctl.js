@@ -24,17 +24,19 @@ class Model
 	constructor()
 	{
 		this.connected = false;
-	}
-
-	setConnectionState()
-	{
-
+		this.fans = [];
 	}
 }
 
 class Fan
 {
-	
+	constructor(id, name, dutyCycle, rpm)
+	{
+		this.id = id;
+		this.name = name;
+		this.dutyCycle = typeof(dutyCycle) == 'number' ? dutyCycle : 0;
+		this.rpm = typeof(rpm) == 'number' ? rpm : 0;
+	}
 }
 
 class Controller
@@ -67,6 +69,20 @@ class Controller
 		this.model.connected = false;
 		this.update();
 	}
+
+	initFans(fans)
+	{
+		this.model.fans = [];
+		fans.forEach(fan => this.model.fans[fan.id] = new Fan(fan.id, fan.name));
+		this.update();
+	}
+
+	updateFan(fan)
+	{
+		var localFan = this.model.fans[fan.id];
+		localFan.rpm = fan.rpm;
+		localFan.dutyCycle = fan.dutyCycle;
+	}
 }
 
 
@@ -83,6 +99,18 @@ $(document).ready(function()
 	{
 		console.log("Connected");
 		controller.connect();
+	});
+
+	socket.on('faninit', function(fans)
+	{
+		console.log(fans);
+		controller.initFans(fans.fans);
+	});
+
+	socket.on('fanupdate', function(fan)
+	{
+		console.log(msg);
+		controller.updateFan(fan);
 	});
 
 	socket.on('disconnect', function()

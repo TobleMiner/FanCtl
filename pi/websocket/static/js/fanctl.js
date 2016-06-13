@@ -104,7 +104,7 @@ $(document).ready(function()
 	socket.on('faninit', function(fans)
 	{
 		console.log(fans);
-		controller.initFans(fans.fans);
+		//controller.initFans(fans.fans);
 	});
 
 	socket.on('fanupdate', function(fan)

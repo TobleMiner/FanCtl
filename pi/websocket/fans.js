@@ -1,11 +1,27 @@
 var I2cMaster = require('./i2cmaster.js');
 
+class FanData
+{
+	constructor(id, controllerid, dutycycle, rpm)
+	{
+		this.id = id;
+		this.controllerid = controllerid;
+		this.dutycycle = dutycycle;
+		this.rpm = rpm;
+	}
+}
+
 class Fan
 {
 	constructor(id, controller)
 	{
 		this.controller = controller;
 		this.id = id;
+	}
+
+	getFanData()
+	{
+		return new FanData(this.id, this.controller.address, this.getDutyCycle(), this.getRpm());
 	}
 
 	setDutyCycle(dutyCycle)
@@ -49,6 +65,11 @@ class Controller
 	{
 		return this.master.readRegisterByte(this.address, 0);
 	}
+
+	forEach(func)
+	{
+		this.fans.forEach(fan => func(fan));
+	}
 }
 
 class FanCtl
@@ -58,14 +79,30 @@ class FanCtl
 		this.master = new I2cMaster(i2cbus);
 		if(typeof(address) != 'object')
 			address = [address];
-		this.controllers = []
+		this.controllers = [];
 		address.forEach(address =>
 			this.controllers[address] = new Controller(this.master, address));
+		this.buildFanIndex();
+	}
+
+	buildFanIndex()
+	{
+		this.fanindex = {};
+		var i = 0;
+		this.controllers.forEach(cntrl => {
+			this.fanindex[cntrl.address] = [];
+			var j = 0;
+			cntrl.forEach(fan => {
+				this.fanindex[cntrl.address].push(fan.getFanData());
+				j++;
+			});
+			i++;
+		});
 	}
 
 	forEach(func)
 	{
-		this.controllers.forEach(cntrl => cntrl.fans.forEach(fan => func(fan)));
+		this.controllers.forEach(cntrl => func(cntrl));
 	}
 }
 

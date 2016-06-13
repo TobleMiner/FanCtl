@@ -9,7 +9,6 @@ var conf = require('./config.json');
 var FanCtl = require('./fans.js');
 
 var fanctl = new FanCtl(conf.i2cbus, conf.controllers);
-fanctl.forEach(fan => console.log(fan));
 
 app.use(express.static(__dirname + '/static'));
 
@@ -26,6 +25,9 @@ io.sockets.on('connection', function(socket)
 	});
 
 	socket.emit('connect', {});
+
+	socket.emit('faninit', fanctl.fanindex);
+
 	// socket.emit('fanupdate', {"key":"value"});
 });
 

@@ -6,6 +6,29 @@ class Fan
 	{
 		this.controller = controller;
 		this.id = id;
+		console.log(this.getRpm());
+	}
+
+	setDutyCycle()
+	{
+		var register = this.id * 2 + 1;
+	}
+
+	getDutyCycle()
+	{
+		var register = this.id * 2 + 1;
+		return this.controller.master.readRegisterByte(this.controller.address, register);
+	}
+
+	setRpm()
+	{
+		var register = this.id * 2 + 2;
+	}
+
+	getRpm()
+	{
+		var register = this.id * 2 + 2;
+		return this.controller.master.readRegisterWord(this.controller.address, register);
 	}
 }
 
@@ -15,7 +38,10 @@ class Controller
 	{
 		this.address = address;
 		this.master = master;
-		console.log(this.getNumFans());
+		this.numfans = this.getNumFans();
+		this.fans = [];
+		for(var i = 0; i < this.numfans; i++)
+			this.fans[i] = new Fan(i, this);
 	}
 
 	getNumFans()

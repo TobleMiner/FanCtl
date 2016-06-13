@@ -1,3 +1,5 @@
 {
-	"port": 8765
+	"port": 8765,
+	"i2cbus": 1,
+	"controllers": 42
 }

@@ -8,7 +8,8 @@ var conf = require('./config.json');
 
 var FanCtl = require('./fans.js');
 
-new FanCtl(1, 42);
+var fanctl = new FanCtl(conf.i2cbus, conf.controllers);
+fanctl.forEach(fan => console.log(fan));
 
 app.use(express.static(__dirname + '/static'));
 

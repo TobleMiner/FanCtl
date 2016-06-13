@@ -6,12 +6,12 @@ class Fan
 	{
 		this.controller = controller;
 		this.id = id;
-		console.log(this.getRpm());
 	}
 
-	setDutyCycle()
+	setDutyCycle(dutyCycle)
 	{
 		var register = this.id * 2 + 1;
+		//this.controller.master.writeRegisterByte(this.controller.address, register, dutyCycle);
 	}
 
 	getDutyCycle()
@@ -20,9 +20,10 @@ class Fan
 		return this.controller.master.readRegisterByte(this.controller.address, register);
 	}
 
-	setRpm()
+	setRpm(rpm)
 	{
 		var register = this.id * 2 + 2;
+		//this.controller.master.writeRegisterWord(this.controller.address, register, rpm);
 	}
 
 	getRpm()
@@ -60,6 +61,11 @@ class FanCtl
 		this.controllers = []
 		address.forEach(address =>
 			this.controllers[address] = new Controller(this.master, address));
+	}
+
+	forEach(func)
+	{
+		this.controllers.forEach(cntrl => cntrl.fans.forEach(fan => func(fan)));
 	}
 }
 

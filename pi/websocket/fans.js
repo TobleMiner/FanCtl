@@ -2,12 +2,15 @@ var EventEmitter = require('events');
 
 var I2cMaster = require('./i2cmaster.js');
 
+var uuid = require('uuid');
+
 class FanData
 {
-	constructor(id, controllerid, dutycycle, rpm)
+	constructor(id, controllerid, uuid, dutycycle, rpm)
 	{
 		this.id = id;
 		this.controllerid = controllerid;
+		this.uuid = uuid;
 		this.dutycycle = dutycycle;
 		this.rpm = rpm;
 	}
@@ -20,6 +23,7 @@ class Fan extends EventEmitter
 		super();
 		this.controller = controller;
 		this.id = id;
+		this.uuid = uuid.v4();
 	}
 
 	update()
@@ -31,7 +35,7 @@ class Fan extends EventEmitter
 
 	getFanData()
 	{
-		return new FanData(this.id, this.controller.address, this.dutycycle, this.rpm);
+		return new FanData(this.id, this.controller.address, this.uuid, this.dutycycle, this.rpm);
 	}
 
 	setDutyCycle(dutyCycle)
@@ -70,6 +74,7 @@ class Controller extends EventEmitter
 		this.fans = [];
 		for(var i = 0; i < this.numfans; i++)
 			this.fans[i] = new Fan(i, this);
+		this.uuid = uuid.v4();
 	}
 
 	update()
@@ -108,15 +113,14 @@ class FanCtl extends EventEmitter
 			fanctl.timeoutid = setTimeout(updatefunc, interval);
 		};
 		this.timeoutid = setTimeout(updatefunc, interval);
+		this.uuid = uuid.v4();
 	}
 
 	buildFlatUidFanIndex()
 	{
-		this.fanindex = [];
-		var i = 0;
+		this.fanindex = {};
 		this.controllers.forEach(cntrl => cntrl.forEach(fan => {
-				this.fanindex[i] = fan;
-				i++;
+				this.fanindex[fan.uuid] = fan;
 		}));
 	}
 

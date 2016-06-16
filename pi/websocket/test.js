@@ -26,17 +26,19 @@ io.sockets.on('connection', function(socket)
 
 	socket.emit('connect', {});
 
-	socket.emit('faninit', Object.keys(fanctl.fanindex));
+	socket.emit('faninit', {'server' : fanctl.uuid,
+		'fans' : Object.keys(fanctl.fanindex)});
 
 	fanctl.on('update', function()
 	{
-		socket.emit('fanupdate', {});
+		for(key in fanctl.fanindex)
+			if(fanctl.fanindex.hasOwnProperty(key))
+				socket.emit('fanupdate', fanctl.fanindex[key].getFanData());
 	});
 
-	socket.on('disconnection', function()
+	socket.on('disconnect', function()
 	{
 		console.log('Client disconnected');
-		clearInterval(intervalid);
 	});
 });
 

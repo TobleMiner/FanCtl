@@ -8,6 +8,7 @@
     "i2c-bus": "*",
     "jquery": "*",
     "socket.io": "*",
-    "chart.js": "*"
+    "chart.js": "*",
+    "uuid.js": "*"
   }
 }

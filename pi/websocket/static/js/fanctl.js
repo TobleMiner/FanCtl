@@ -1,3 +1,11 @@
+class View
+{
+	update(model)
+	{
+		throw new Error('Not implemented');
+	}
+}
+
 class ConnectionStateView
 {
 	constructor()
@@ -19,23 +27,54 @@ class ConnectionStateView
 	}
 }
 
+class FanStateView
+{
+	constructor(fanid)
+	{
+		this.fanid = fanid;
+	}
+}
+
+class FanStateConsoleView extends FanStateView
+{
+	constructor(fanid)
+	{
+		super(fanid);
+	}
+
+	update(model)
+	{
+		var fan = model.getFan(this.fanid);
+		console.log(this.fanid + ': dutycycle=' + fan.dutycycle + ' rpm=' + fan.rpm);
+	}
+}
+
 class Model
 {
 	constructor()
 	{
 		this.connected = false;
-		this.fans = [];
+		this.fans = {};
+	}
+
+	addFan(id)
+	{
+		this.fans[id] = new Fan(id);
+	}
+
+	getFan(id)
+	{
+		return this.fans[id];
 	}
 }
 
 class Fan
 {
-	constructor(id, name, dutyCycle, rpm)
+	constructor(id, dutycycle=0, rpm=0)
 	{
 		this.id = id;
-		this.name = name;
-		this.dutyCycle = typeof(dutyCycle) == 'number' ? dutyCycle : 0;
-		this.rpm = typeof(rpm) == 'number' ? rpm : 0;
+		this.dutycycle = dutycycle;
+		this.rpm = rpm;
 	}
 }
 
@@ -45,12 +84,30 @@ class Controller
 	{
 		this.model = model;
 		this.views = [];
+		this.server = null;
 	}
 
 	addView(view)
 	{
 		this.views.push(view);
 		this.update();
+	}
+
+	removeView(view)
+	{
+		this.views.remove(view);
+	}
+
+	removeViewsByClass(clazz)
+	{
+		this.getViewsByClass(clazz).forEach(view => this.removeView(view));
+	}
+
+	getViewsByClass(clazz)
+	{
+		var views = []
+		this.views.forEach(view => { if(view instanceof clazz) views.push(view); });
+		return views;
 	}
 
 	update()
@@ -70,18 +127,26 @@ class Controller
 		this.update();
 	}
 
-	initFans(fans)
+	initFans(init)
 	{
-		this.model.fans = [];
-		fans.forEach(fan => this.model.fans[fan.id] = new Fan(fan.id, fan.name));
+		if(this.server != init.server)
+		{
+			console.log('Server instance changed! Reinitializing fans');
+			this.removeViewsByClass(FanStateView);
+			this.server = init.server;
+			this.model.fans = {};
+			init.fans.forEach(fanid => {
+				this.model.addFan(fanid);
+				this.addView(new FanStateConsoleView(fanid));
+			});
+		}
 		this.update();
 	}
 
 	updateFan(fan)
 	{
-		var localFan = this.model.fans[fan.id];
-		localFan.rpm = fan.rpm;
-		localFan.dutyCycle = fan.dutyCycle;
+		this.model.fans[fan.uuid] = fan;
+		this.update();
 	}
 }
 
@@ -101,16 +166,14 @@ $(document).ready(function()
 		controller.connect();
 	});
 
-	socket.on('faninit', function(fans)
+	socket.on('faninit', function(init)
 	{
-		console.log(fans);
-		//controller.initFans(fans.fans);
+		controller.initFans(init);
 	});
 
 	socket.on('fanupdate', function(fan)
 	{
-		console.log(fan);
-		// controller.updateFan(fan);
+		controller.updateFan(fan);
 	});
 
 	socket.on('disconnect', function()

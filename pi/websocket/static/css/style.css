@@ -3,7 +3,7 @@ body
 	font-family: "Source Sans Pro", sans-serif;
 }
 
-h3
+#state-indicator
 {
 	position: fixed;
 	text-align: center;
@@ -11,7 +11,20 @@ h3
 	width: 100%;
 	z-index: 2;
 	text-transform: uppercase;
-	font-size: .8rem;
+	font-size: .9rem;
 	letter-spacing: .2em;
 	line-height: 1.618em;
+	-webkit-touch-callout: none;
+	-webkit-user-select: none;
+	-moz-user-select: none;
+	-ms-user-select: none;
+	user-select: none;
+	margin: 10px;
+}
+
+#spacer
+{
+	width: 100%;
+	height: 1.4562em;
+	margin: 10px;
 }

@@ -1,0 +1,57 @@
+.fan-container
+{
+	display: flex;
+	flex-direction: column;
+	background-color: #000;
+	margin: 0 0 10px 0;
+}
+.fan-upper
+{
+	display: flex;
+	flex-direction: row;
+	background-color: blue;
+	height: 60%;
+}
+.fan-icon
+{
+	width: 50px;
+	height: 50px;
+	background-color: red;
+}
+.fan-graph
+{
+	height: 50px;
+	width: 100%;
+	background-color: grey;
+}
+.fan-lower
+{
+	display: flex;
+	flex-direction: row;
+	background-color: green;
+	height: 40%;
+}
+.fan-controls
+{
+	display: inline-flex;
+	width: auto;
+	background-color: yellow;
+	justify-content: center;
+}
+.fan-key
+{
+	display: inline-flex;
+	width: 100%;
+	background-color: orange;
+	justify-content: flex-start;
+}
+
+input
+{
+	margin: 6px;
+}
+
+h3
+{
+	margin: 10px;
+}

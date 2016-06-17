@@ -6,10 +6,11 @@ class View
 	}
 }
 
-class ConnectionStateView
+class ConnectionStateView extends View
 {
 	constructor()
 	{
+		super();
 		this.indicator = document.getElementById('state-indicator');
 	}
 
@@ -27,10 +28,11 @@ class ConnectionStateView
 	}
 }
 
-class FanStateView
+class FanStateView extends View
 {
 	constructor(fanid)
 	{
+		super();
 		this.fanid = fanid;
 	}
 }
@@ -46,6 +48,32 @@ class FanStateConsoleView extends FanStateView
 	{
 		var fan = model.getFan(this.fanid);
 		console.log(this.fanid + ': dutycycle=' + fan.dutycycle + ' rpm=' + fan.rpm);
+	}
+}
+
+class FanStateUiView extends FanStateView
+{
+	constructor(fanid)
+	{
+		super(fanid);
+		this.createDom();
+	}
+
+	createDom()
+	{
+		this.fandom = new FanDom(this.fanid, 'fans');
+	}
+
+	destroyDom()
+	{
+
+	}
+
+	update(model)
+	{
+		var fan = model.getFan(this.fanid);
+		this.fandom.setPwm(fan.dutycycle);
+		this.fandom.setRpm(fan.rpm);
 	}
 }
 
@@ -138,6 +166,7 @@ class Controller
 			init.fans.forEach(fanid => {
 				this.model.addFan(fanid);
 				this.addView(new FanStateConsoleView(fanid));
+				this.addView(new FanStateUiView(fanid));
 			});
 		}
 		this.update();

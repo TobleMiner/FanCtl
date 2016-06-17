@@ -4,6 +4,8 @@ class View
 	{
 		throw new Error('Not implemented');
 	}
+
+	destroy() { }
 }
 
 class ConnectionStateView extends View
@@ -56,17 +58,12 @@ class FanStateUiView extends FanStateView
 	constructor(fanid)
 	{
 		super(fanid);
-		this.createDom();
-	}
-
-	createDom()
-	{
 		this.fandom = new FanDom(this.fanid, 'fans');
 	}
 
-	destroyDom()
+	destroy()
 	{
-
+		this.fandom.destroy();
 	}
 
 	update(model)
@@ -123,7 +120,8 @@ class Controller
 
 	removeView(view)
 	{
-		this.views.remove(view);
+		this.views.splice(this.views.indexOf(view), 1);
+		view.destroy();
 	}
 
 	removeViewsByClass(clazz)

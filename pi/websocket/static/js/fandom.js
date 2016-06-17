@@ -1,11 +1,12 @@
 class FanDom
 {
-	constructor(fanid, parent)
+	constructor(fanid, parent, controller)
 	{
 		this.fanid = fanid;
 		if(typeof(parent) == 'string')
 			parent = $('#' + parent);
 		this.parent = parent;
+		this.controller = controller;
 		var domstr = `
 		<div id="${fanid}" class="fan-container">
 			<div class="fan-upper">
@@ -32,6 +33,14 @@ class FanDom
 		this.root = $('#' + fanid);
 		this.rpm = $('#' + fanid + '-rpm');
 		this.pwm = $('#' + fanid + '-pwm');
+		this.rpm.bind('change', {'controller' : controller, 'fanid' : fanid}, function(event)
+		{
+			event.data.controller.onRpmSet(event.data.fanid, event.target.value);
+		});
+		this.pwm.bind('change', {'controller' : controller, 'fanid' : fanid}, function(event)
+		{
+			event.data.controller.onPwmSet(event.data.fanid, event.target.value);
+		});
 	}
 
 	setRpm(rpm)

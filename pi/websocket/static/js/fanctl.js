@@ -55,10 +55,15 @@ class FanStateConsoleView extends FanStateView
 
 class FanStateUiView extends FanStateView
 {
-	constructor(fanid)
+	constructor(fanid, controller)
 	{
 		super(fanid);
-		this.fandom = new FanDom(this.fanid, 'fans');
+		this.fandom = new FanDom(this.fanid, 'fans', controller);
+	}
+
+	getFanDom()
+	{
+		return this.fandom;
 	}
 
 	destroy()
@@ -101,12 +106,23 @@ class Fan
 		this.dutycycle = dutycycle;
 		this.rpm = rpm;
 	}
+
+	setRpm(rpm)
+	{
+		this.rpm = rpm;
+	}
+
+	setPwm(pwm)
+	{
+		this.dutycycle = pwm;
+	}
 }
 
 class Controller
 {
-	constructor(model)
+	constructor(socket, model)
 	{
+		this.socket = socket;
 		this.model = model;
 		this.views = [];
 		this.server = null;
@@ -141,6 +157,20 @@ class Controller
 		this.views.forEach(view => view.update(this.model));
 	}
 
+	onRpmSet(fanid, rpm)
+	{
+		var fan = this.model.getFan(fanid);
+		fan.setRpm(rpm);
+		this.socket.emit('setrpm', {'fanid' : fanid, 'rpm' : rpm});
+	}
+
+	onPwmSet(fanid, pwm)
+	{
+		var fan = this.model.getFan(fanid);
+		fan.setPwm(pwm);
+		this.socket.emit('setpwm', {'fanid' : fanid, 'pwm' : pwm});
+	}
+
 	connect()
 	{
 		this.model.connected = true;
@@ -163,8 +193,8 @@ class Controller
 			this.model.fans = {};
 			init.fans.forEach(fanid => {
 				this.model.addFan(fanid);
-				this.addView(new FanStateConsoleView(fanid));
-				this.addView(new FanStateUiView(fanid));
+				//this.addView(new FanStateConsoleView(fanid));
+				this.addView(new FanStateUiView(fanid, this));
 			});
 		}
 		this.update();
@@ -172,7 +202,9 @@ class Controller
 
 	updateFan(fan)
 	{
-		this.model.fans[fan.uuid] = fan;
+		var localfan = this.model.fans[fan.uuid];
+		localfan.setPwm(fan.dutycycle);
+		localfan.setRpm(fan.rpm);
 		this.update();
 	}
 }
@@ -180,12 +212,11 @@ class Controller
 
 $(document).ready(function()
 {
+	var socket = io.connect();
 	model = new Model();
-	controller = new Controller(model);
+	controller = new Controller(socket, model);
 	var view = new ConnectionStateView();
 	controller.addView(view);
-
-	var socket = io.connect();
 
 	socket.on('connect', function()
 	{

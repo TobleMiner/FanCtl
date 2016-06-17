@@ -41,7 +41,7 @@ class Fan extends EventEmitter
 	setDutyCycle(dutyCycle)
 	{
 		var register = this.id * 2 + 1;
-		//this.controller.master.writeRegisterByte(this.controller.address, register, dutyCycle);
+		this.controller.master.writeRegisterByte(this.controller.address, register, dutyCycle);
 	}
 
 	getDutyCycle()
@@ -122,6 +122,11 @@ class FanCtl extends EventEmitter
 		this.controllers.forEach(cntrl => cntrl.forEach(fan => {
 				this.fanindex[fan.uuid] = fan;
 		}));
+	}
+
+	getFanByUUID(id)
+	{
+		return this.fanindex[id];
 	}
 
 	update()

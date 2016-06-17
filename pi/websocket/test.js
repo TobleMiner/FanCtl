@@ -36,6 +36,16 @@ io.sockets.on('connection', function(socket)
 				socket.emit('fanupdate', fanctl.fanindex[key].getFanData());
 	});
 
+	socket.on('setrpm', function(msg)
+	{
+		fanctl.getFanByUUID(msg.fanid).setRpm(msg.rpm);
+	});
+
+	socket.on('setpwm', function(msg)
+	{
+		fanctl.getFanByUUID(msg.fanid).setDutyCycle(msg.pwm);
+	});
+
 	socket.on('disconnect', function()
 	{
 		console.log('Client disconnected');

@@ -49,6 +49,6 @@ class FanDom
 		this.root.remove();
 		this.root = null;
 		this.rpm = null;
-		this,pwm = null;
+		this.pwm = null;
 	}
 }

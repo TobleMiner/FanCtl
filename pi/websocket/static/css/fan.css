@@ -41,13 +41,6 @@
 	background-color: yellow;
 	justify-content: center;
 }
-.fan-key
-{
-	display: inline-flex;
-	width: 100%;
-	background-color: orange;
-	justify-content: flex-start;
-}
 
 input
 {

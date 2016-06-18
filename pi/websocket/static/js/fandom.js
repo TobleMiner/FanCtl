@@ -21,10 +21,6 @@ class FanDom
 					<input id="${fanid}-rpm" type="number" name="name" value="0">
 					<input id="${fanid}-pwm" type="range" name="name" min="0" max="255" value="0">
 				</div>
-				<div class="fan-key">
-					<h3>Speed</h3>
-					<h3>Duty cycle</h3>
-				</div>
 			</div>
 		</div>
 		`;

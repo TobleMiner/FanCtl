@@ -104,7 +104,8 @@ class FanStateUiView extends FanStateView
 						type: 'linear',
 						id: 'rpm',
 						ticks: {
-							min: 0
+							min: 0,
+							suggestedMax: 200
 						}
 					}]
 				},
@@ -112,7 +113,6 @@ class FanStateUiView extends FanStateView
 				maintainAspectRatio: false
 			}
 		});
-		console.log(this.chart);
 		this.lastid = 0;
 	}
 

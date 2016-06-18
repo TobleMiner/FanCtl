@@ -102,9 +102,7 @@ class Controller extends EventEmitter
 		scheduler.enqueue(this.updateNumFans, this);
 		scheduler.execute(function()
 		{
-			this.fans = [];
-			for(var i = 0; i < this.numfans; i++)
-				this.fans[i] = new Fan(i, this);
+			this.initFans();
 			this.emit('ready');
 		}, null, this);
 		this.uuid = uuid.v4();
@@ -122,6 +120,13 @@ class Controller extends EventEmitter
 		}, this);
 	}
 
+	initFans()
+	{
+		this.fans = [];
+		for(var i = 0; i < this.numfans; i++)
+			this.fans[i] = new Fan(i, this);
+	}
+
 	updateNumFans(callback, cbdata)
 	{
 		this.master.readRegisterByte(this.address, 0, function(data)
@@ -130,8 +135,6 @@ class Controller extends EventEmitter
 			callback(cbdata);
 		}, {controller: this});
 	}
-
-
 
 	getNumFans()
 	{

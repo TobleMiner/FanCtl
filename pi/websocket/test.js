@@ -8,7 +8,6 @@ var conf = require('./config.json');
 
 var FanCtl = require('./fans.js');
 
-var fanctl = new FanCtl(conf.i2cbus, conf.controllers);
 
 app.use(express.static(__dirname + '/static'));
 
@@ -16,6 +15,8 @@ app.get('/', function(req, res)
 {
 	res.sendFile(__dirname + '/static/index.html');
 });
+
+var fanctl = new FanCtl(conf.i2cbus, conf.controllers);
 
 io.sockets.on('connection', function(socket)
 {

@@ -4,6 +4,8 @@ var I2cMaster = require('./i2cmaster.js');
 
 var uuid = require('uuid');
 
+var LinearScheduler = require('./scheduler.js');
+
 class FanData
 {
 	constructor(id, controllerid, uuid, dutycycle, rpm)
@@ -26,11 +28,17 @@ class Fan extends EventEmitter
 		this.uuid = uuid.v4();
 	}
 
-	update()
+	update(callback, cbdata)
 	{
-		this.dutycycle = this.getDutyCycle();
-		this.rpm = this.getRpm();
-		this.emit('update');
+		var scheduler = new LinearScheduler();
+		scheduler.enqueue(this.updateDutyCycle, this);
+		scheduler.enqueue(this.updateRpm, this);
+		scheduler.execute(function(fan)
+		{
+			fan.emit('update');
+			if(callback)
+				callback(cbdata);
+		}, this);
 	}
 
 	getFanData()
@@ -46,8 +54,18 @@ class Fan extends EventEmitter
 
 	getDutyCycle()
 	{
+		return this.dutycycle;
+	}
+
+	updateDutyCycle(callback, cbdata)
+	{
 		var register = this.id * 2 + 1;
-		return this.controller.master.readRegisterByte(this.controller.address, register);
+		this.controller.master.readRegisterByte(this.controller.address, register, function(data)
+		{
+			data.cbdata.dutycycle = data.value;
+			if(callback)
+				callback(cbdata);
+		}, this);
 	}
 
 	setRpm(rpm)
@@ -58,8 +76,18 @@ class Fan extends EventEmitter
 
 	getRpm()
 	{
+		return this.rpm;
+	}
+
+	updateRpm(callback, cbdata)
+	{
 		var register = this.id * 2 + 2;
-		return this.controller.master.readRegisterWord(this.controller.address, register);
+		return this.controller.master.readRegisterWord(this.controller.address, register, function(data)
+		{
+			data.cbdata.rpm = data.value;
+			if(callback)
+				callback(cbdata);
+		}, this);
 	}
 }
 
@@ -70,22 +98,44 @@ class Controller extends EventEmitter
 		super();
 		this.address = address;
 		this.master = master;
-		this.numfans = this.getNumFans();
-		this.fans = [];
-		for(var i = 0; i < this.numfans; i++)
-			this.fans[i] = new Fan(i, this);
+		var scheduler = new LinearScheduler();
+		scheduler.enqueue(this.updateNumFans, this);
+		scheduler.execute(function()
+		{
+			this.fans = [];
+			for(var i = 0; i < this.numfans; i++)
+				this.fans[i] = new Fan(i, this);
+			this.emit('ready');
+		}, null, this);
 		this.uuid = uuid.v4();
 	}
 
-	update()
+	update(callback, cbdata)
 	{
-		this.forEach(fan => fan.update());
-		this.emit('update');
+		var scheduler = new LinearScheduler();
+		this.forEach(fan => scheduler.enqueue(fan.update, fan));
+		scheduler.execute(function(controller)
+		{
+			controller.emit('update');
+			if(callback)
+				callback(cbdata);
+		}, this);
 	}
+
+	updateNumFans(callback, cbdata)
+	{
+		this.master.readRegisterByte(this.address, 0, function(data)
+		{
+			data.cbdata.controller.numfans = data.value;
+			callback(cbdata);
+		}, {controller: this});
+	}
+
+
 
 	getNumFans()
 	{
-		return this.master.readRegisterByte(this.address, 0);
+		return this.numfans;
 	}
 
 	forEach(func)
@@ -109,8 +159,10 @@ class FanCtl extends EventEmitter
 		var fanctl = this;
 		var updatefunc = function()
 		{
-			fanctl.update();
-			fanctl.timeoutid = setTimeout(updatefunc, interval);
+			fanctl.update(function(fanctl)
+			{
+				fanctl.timeoutid = setTimeout(updatefunc, interval);
+			}, fanctl);
 		};
 		this.timeoutid = setTimeout(updatefunc, interval);
 		this.uuid = uuid.v4();
@@ -129,10 +181,16 @@ class FanCtl extends EventEmitter
 		return this.fanindex[id];
 	}
 
-	update()
+	update(callback, cbdata)
 	{
-		this.forEach(cntrl => cntrl.update());
-		this.emit('update');
+		var scheduler = new LinearScheduler();
+		this.forEach(cntrl => scheduler.enqueue(cntrl.update, cntrl));
+		scheduler.execute(function(fanctl)
+		{
+			fanctl.emit('update');
+			if(callback)
+				callback(cbdata);
+		}, this);
 	}
 
 	forEach(func)

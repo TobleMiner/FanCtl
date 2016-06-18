@@ -1,6 +1,6 @@
 class View
 {
-	update(model)
+	update(model, src)
 	{
 		throw new Error('Not implemented');
 	}
@@ -24,7 +24,7 @@ class ConnectionStateView extends View
 			this.indicator.innerText = 'Connecting ...';
 	}
 
-	update(model)
+	update(model, src)
 	{
 		this.showState(model.connected);
 	}
@@ -36,6 +36,7 @@ class FanStateView extends View
 	{
 		super();
 		this.fanid = fanid;
+		this.fan = null;
 	}
 }
 
@@ -46,7 +47,7 @@ class FanStateConsoleView extends FanStateView
 		super(fanid);
 	}
 
-	update(model)
+	update(model, src)
 	{
 		var fan = model.getFan(this.fanid);
 		console.log(this.fanid + ': dutycycle=' + fan.dutycycle + ' rpm=' + fan.rpm);
@@ -84,7 +85,11 @@ class FanStateUiView extends FanStateView
 				scales: {
 					xAxes: [{
 						type: 'linear',
-						position: 'bottom'
+						position: 'bottom',
+						ticks: {
+							min: 0,
+							max: 100
+						}
 					}],
 					yAxes: [{
 						type: 'linear',
@@ -97,16 +102,17 @@ class FanStateUiView extends FanStateView
 					},
 					{
 						type: 'linear',
-						id: 'rpm'/*,
+						id: 'rpm',
 						ticks: {
 							min: 0
-						}*/
+						}
 					}]
 				},
 				responsive: true,
 				maintainAspectRatio: false
 			}
 		});
+		console.log(this.chart);
 		this.lastid = 0;
 	}
 
@@ -121,19 +127,21 @@ class FanStateUiView extends FanStateView
 		this.fandom.destroy();
 	}
 
-	update(model)
+	update(model, src)
 	{
+		if(src != this.fanid)
+			return;
 		var fan = model.getFan(this.fanid);
 		this.fandom.setPwm(fan.dutycycle);
 		this.fandom.setRpm(fan.rpm);
 		this.chart.config.data.datasets[0].data.push({x: this.lastid, y: fan.dutycycle});
 		this.chart.config.data.datasets[1].data.push({x: this.lastid++, y: fan.rpm});
-		if(this.chart.config.data.datasets[0].data.length >= 100)
+		if(this.lastid > 100)
 		{
-			this.chart.config.data.datasets[0].data.shift();
-			this.chart.config.data.datasets[1].data.shift();
+			this.chart.config.options.scales.xAxes[0].ticks.min = this.lastid - 100;
+			this.chart.config.options.scales.xAxes[0].ticks.max = this.lastid;
 		}
-		this.chart.update();
+		this.chart.update(10);
 	}
 }
 
@@ -145,9 +153,9 @@ class Model
 		this.fans = {};
 	}
 
-	addFan(id)
+	addFan(fan)
 	{
-		this.fans[id] = new Fan(id);
+		this.fans[fan.id] = fan;
 	}
 
 	getFan(id)
@@ -174,6 +182,12 @@ class Fan
 	{
 		this.dutycycle = pwm;
 	}
+
+	compare(fan)
+	{
+		return this.id == fan.id &&
+			this.dutycycle == fan.dutycycle && this.rpm == fan.rpm;
+	}
 }
 
 class Controller
@@ -184,6 +198,42 @@ class Controller
 		this.model = model;
 		this.views = [];
 		this.server = null;
+		this.databindings = {};
+	}
+
+	addBinding(key, target)
+	{
+		var targets = this.databindings[key];
+		if(!targets)
+			targets = [];
+		targets.push(target);
+		this.databindings[key] = targets;
+	}
+
+	removeBinding(key, target=null)
+	{
+		if(target == null)
+		{
+			delete this.databindings[key];
+			return;
+		}
+		var targets = this.databindings[key];
+		targets.slice(targets.indexOf(target), 1);
+		this.databindings[key] = targets;
+	}
+
+	removeAllBindings(target)
+	{
+		for(key in this.databindings)
+		{
+			if(this.databindings.hasOwnProperty(key))
+			{
+				var targets = this.databindings[key];
+				var i;
+				while((i = targets.indexOf(target)) >= 0)
+					targets.splice(i, 1);
+			}
+		}
 	}
 
 	addView(view)
@@ -194,6 +244,7 @@ class Controller
 
 	removeView(view)
 	{
+		this.removeBinding(view);
 		this.views.splice(this.views.indexOf(view), 1);
 		view.destroy();
 	}
@@ -210,9 +261,9 @@ class Controller
 		return views;
 	}
 
-	update()
+	update(src=this)
 	{
-		this.views.forEach(view => view.update(this.model));
+		this.views.forEach(view => view.update(this.model, src));
 	}
 
 	onRpmSet(fanid, rpm)
@@ -250,9 +301,11 @@ class Controller
 			this.server = init.server;
 			this.model.fans = {};
 			init.fans.forEach(fanid => {
-				this.model.addFan(fanid);
+				this.model.addFan(new Fan(fanid));
+				var view = new FanStateUiView(fanid, this);
+				this.addBinding(fanid, view);
+				this.addView(view);
 				//this.addView(new FanStateConsoleView(fanid));
-				this.addView(new FanStateUiView(fanid, this));
 			});
 		}
 		this.update();
@@ -263,7 +316,7 @@ class Controller
 		var localfan = this.model.fans[fan.uuid];
 		localfan.setPwm(fan.dutycycle);
 		localfan.setRpm(fan.rpm);
-		this.update();
+		this.update(fan.uuid);
 	}
 }
 

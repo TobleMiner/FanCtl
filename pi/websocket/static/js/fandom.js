@@ -10,11 +10,10 @@ class FanDom
 		var domstr = `
 		<div id="${fanid}" class="fan-container">
 			<div class="fan-upper">
-				<div class="fan-icon">
-
+				<div class="fan-icon" title="${fanid}">
 				</div>
 				<div class="fan-graph">
-
+					<canvas id="${fanid}-chart"></canvas>
 				</div>
 			</div>
 			<div class="fan-lower">
@@ -33,6 +32,7 @@ class FanDom
 		this.root = $('#' + fanid);
 		this.rpm = $('#' + fanid + '-rpm');
 		this.pwm = $('#' + fanid + '-pwm');
+		this.chart = $('#' + fanid + '-chart');
 		this.rpm.bind('change', {'controller' : controller, 'fanid' : fanid}, function(event)
 		{
 			event.data.controller.onRpmSet(event.data.fanid, event.target.value);
@@ -59,5 +59,6 @@ class FanDom
 		this.root = null;
 		this.rpm = null;
 		this.pwm = null;
+		this.chart = null;
 	}
 }

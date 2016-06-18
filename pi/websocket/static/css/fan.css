@@ -2,27 +2,30 @@
 {
 	display: flex;
 	flex-direction: column;
-	background-color: #000;
+	/*background-color: #000;*/
 	margin: 0 0 10px 0;
 }
 .fan-upper
 {
+	height: 10em;
 	display: flex;
 	flex-direction: row;
-	background-color: blue;
-	height: 60%;
+	/*background-color: blue;*/
 }
 .fan-icon
 {
-	width: 50px;
-	height: 50px;
+	height: 100%;
 	background-color: red;
+	background-image: url("/img/fan.png");
+	background-repeat: no-repeat;
+	background-size: 92%;
+	background-position: center;
 }
 .fan-graph
 {
-	height: 50px;
 	width: 100%;
-	background-color: grey;
+	/*background-color: grey;*/
+	display: block;
 }
 .fan-lower
 {
@@ -54,4 +57,10 @@ input
 h3
 {
 	margin: 10px;
+}
+
+canvas
+{
+	width: 100%;
+	height: 100%;
 }

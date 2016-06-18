@@ -59,7 +59,57 @@ class FanStateUiView extends FanStateView
 	{
 		super(fanid);
 		this.fandom = new FanDom(this.fanid, 'fans', controller);
+		this.chart = new Chart(this.fandom.chart,
+		{
+			type: 'line',
+			data: {
+				datasets: [
+					{
+						label: 'PWM',
+						data: [],
+						borderColor: '#FF0000',
+						fill: false,
+						yAxisID: 'pwm'
+					},
+					{
+						label: 'RPM',
+						data: [],
+						borderColor: '#00FF00',
+						fill: false,
+						yAxisID: 'rpm'
+					}
+				]
+			},
+			options: {
+				scales: {
+					xAxes: [{
+						type: 'linear',
+						position: 'bottom'
+					}],
+					yAxes: [{
+						type: 'linear',
+						id: 'pwm',
+						ticks: {
+							min: 0,
+							max: 255,
+							suggestedMax: 50
+						}
+					},
+					{
+						type: 'linear',
+						id: 'rpm'/*,
+						ticks: {
+							min: 0
+						}*/
+					}]
+				},
+				responsive: true,
+				maintainAspectRatio: false
+			}
+		});
+		this.lastid = 0;
 	}
+
 
 	getFanDom()
 	{
@@ -76,6 +126,14 @@ class FanStateUiView extends FanStateView
 		var fan = model.getFan(this.fanid);
 		this.fandom.setPwm(fan.dutycycle);
 		this.fandom.setRpm(fan.rpm);
+		this.chart.config.data.datasets[0].data.push({x: this.lastid, y: fan.dutycycle});
+		this.chart.config.data.datasets[1].data.push({x: this.lastid++, y: fan.rpm});
+		if(this.chart.config.data.datasets[0].data.length >= 100)
+		{
+			this.chart.config.data.datasets[0].data.shift();
+			this.chart.config.data.datasets[1].data.shift();
+		}
+		this.chart.update();
 	}
 }
 

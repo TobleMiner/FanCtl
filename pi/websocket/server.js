@@ -30,12 +30,14 @@ io.sockets.on('connection', function(socket)
 	socket.emit('faninit', {'server' : fanctl.uuid,
 		'fans' : Object.keys(fanctl.fanindex)});
 
-	fanctl.on('update', function()
+	var updateListener = function()
 	{
 		for(key in fanctl.fanindex)
 			if(fanctl.fanindex.hasOwnProperty(key))
 				socket.emit('fanupdate', fanctl.fanindex[key].getFanData());
-	});
+	};
+
+	fanctl.on('update', updateListener);
 
 	socket.on('setrpm', function(msg)
 	{
@@ -50,6 +52,7 @@ io.sockets.on('connection', function(socket)
 	socket.on('disconnect', function()
 	{
 		console.log('Client disconnected');
+		fanctl.removeListener('update', updateListener);
 	});
 });
 

@@ -9,6 +9,6 @@
     "jquery": "*",
     "socket.io": "*",
     "chart.js": "*",
-    "uuid.js": "*"
+    "uuid": "*"
   }
 }

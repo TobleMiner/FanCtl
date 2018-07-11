@@ -296,7 +296,7 @@ ISR(TWI_vect)
 						i2c_write_reg(i2c.reg_addr);
 					}
 				default: // Reset I2C
-					TWCR |= (1<<TWEA);
+					TWCR |= (1<<TWEA) | (1<<TWSTO);
 					i2c.num_bytes = 0;
 					i2c_buff_flush();
 					i2c.state = I2C_STATE_IDLE;
@@ -318,7 +318,7 @@ ISR(TWI_vect)
 				case I2C_STATUS_STOP_R:
 				default:
 					i2c_buff_flush();
-					TWCR |= (1<<TWEA);
+					TWCR |= (1<<TWEA) | (1<<TWSTO);
 					i2c.mode = I2C_MODE_R;
 					i2c.state = I2C_STATE_IDLE;
 					i2c.num_bytes = 0;
